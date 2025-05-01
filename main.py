@@ -3,25 +3,35 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
 import random
+import os
 
 #optionals
 chrome_options = Options()
 chrome_options.add_argument("--start-maximized")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-cookies = [
+SampleCookies = [
     {"name": "NID", "value": "your_cookie_value_here", "domain": ".google.com"}
 ]
 
-def addCookie(theDriver):
-    for cookie in cookies:
+def addCookie(theDriver, cookies=SampleCookies):
+    if not os.path.exists("cookies.txt"):
+        with open("cookies.txt", "w") as f:
+            for cookie in cookies:
+                f.write(f"{cookie['name']}={cookie['value']};")
+                theDriver.add_cookie(cookie)
+    else:
+        for cookie in cookies:
             theDriver.add_cookie(cookie)
+            
     theDriver.refresh()
     time.sleep(random.uniform(2, 4))
     
 
 def uc_driver_setup():
     try:
-        uc_driver = uc.Chrome()
+        options = uc.ChromeOptions()
+        options.headless = False
+        uc_driver = uc.Chrome(options=options,uc=True)
         uc_driver.get("https://www.google.com")
         search_box = uc_driver.find_element(By.ID, "APjFqb")
         search_box.send_keys("practicetestautomation")
@@ -42,8 +52,8 @@ def uc_driver_setup():
         btn_submit = uc_driver.find_element(By.ID, "submit")
         btn_submit.click()
         time.sleep(random.uniform(0, 2))
-        
-        uc_driver.close()
+        addCookie(uc_driver,uc_driver.get_cookies())
+          
     except Exception as e:
         print(f"Error initializing : {e}")
         return
